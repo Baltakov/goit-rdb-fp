@@ -1,0 +1,170 @@
+﻿p1_1
+
+
+CREATE SCHEMA `pandemic`;
+
+
+p1_2
+
+
+SELECT * FROM pandemic.infectious_cases;
+
+
+p2_1
+
+
+CREATE TABLE  countries (
+        id INT PRIMARY KEY UNIQUE AUTO_INCREMENT,
+        country_name VARCHAR(50) NOT NULL UNIQUE,
+        code VARCHAR(10) NOT NULL UNIQUE    
+  );
+
+
+p2_2
+
+
+        INSERT INTO countries ( country_name, code)
+        SELECT DISTINCT Entity, Code 
+        FROM infectious_cases;
+
+
+p2_3
+
+
+    CREATE TABLE  infection_statistics (
+                id INT PRIMARY KEY UNIQUE AUTO_INCREMENT,
+            country_id INT,
+            year INT NOT NULL,
+            number_yaws VARCHAR(10),
+            polio_cases INT NOT NULL,
+            cases_guinea_worm INT NOT NULL,
+            number_rabies VARCHAR(20),
+            number_malaria VARCHAR(20),
+            number_hiv VARCHAR(20),
+            number_tuberculosis VARCHAR(20),
+            number_smallpox VARCHAR(20),
+            number_cholera_cases VARCHAR(15),
+            FOREIGN KEY (country_id) REFERENCES countries(id)
+     );
+
+
+p2_4
+
+
+INSERT INTO infection_statistics ( 
+    country_id,
+    year,
+    number_yaws,
+    polio_cases,
+    cases_guinea_worm,
+    number_rabies,
+    number_malaria,
+    number_hiv,
+    number_tuberculosis,
+    number_smallpox,
+    number_cholera_cases
+)
+SELECT
+    c.id,
+    i.Year,
+    i.Number_yaws,
+    i.polio_cases,
+    i.cases_guinea_worm,
+    i.Number_rabies,
+    i.Number_malaria,
+    i.Number_hiv,
+    i.Number_tuberculosis,
+    i.Number_smallpox,
+    i.Number_cholera_cases 
+FROM infectious_cases i
+JOIN countries c ON i.Entity = c.country_name;
+
+
+p3_1
+
+
+SELECT country_id,
+AVG(number_rabies) AS avg_number_rabies,
+MIN(number_rabies) AS min_number_rabies,
+MAX(number_rabies) AS max_number_rabies,
+SUM(number_rabies) AS sum_number_rabies
+FROM infection_statistics
+WHERE number_rabies != ''
+GROUP BY country_id;
+
+
+p3_2
+
+
+SELECT country_id,
+AVG(number_rabies) AS avg_number_rabies,
+MIN(number_rabies) AS min_number_rabies,
+MAX(number_rabies) AS max_number_rabies,
+SUM(number_rabies) AS sum_number_rabies
+FROM infection_statistics
+WHERE number_rabies != ''
+GROUP BY country_id
+ORDER BY avg_number_rabies DESC;
+
+
+p3_3
+
+
+SELECT country_id,
+AVG(number_rabies) AS avg_number_rabies,
+MIN(number_rabies) AS min_number_rabies,
+MAX(number_rabies) AS max_number_rabies,
+SUM(number_rabies) AS sum_number_rabies
+FROM infection_statistics
+WHERE number_rabies != ''
+GROUP BY country_id
+ORDER BY avg_number_rabies DESC
+LIMIT 10;
+
+
+p4_1
+
+
+SELECT year, MAKEDATE(year, 1) AS full_date
+FROM infection_statistics;
+
+
+p4_2
+
+
+SELECT year, MAKEDATE(year, 1) AS full_date,
+CURDATE() AS cur_date
+FROM infection_statistics;
+
+
+p4_3
+
+
+SELECT year, MAKEDATE(year, 1) AS full_date,
+CURDATE() AS cur_date,
+TIMESTAMPDIFF(YEAR, MAKEDATE(year, 1), CURDATE()) AS differense
+FROM infection_statistics;
+
+
+p5
+
+
+DELIMITER //
+CREATE FUNCTION CalculateAgeDiff(year_input INT)
+RETURNS INT
+DETERMINISTIC
+NO SQL
+BEGIN
+    DECLARE last_year DATE DEFAULT MAKEDATE(1996, 1);
+    DECLARE full_date DATE;
+    DECLARE age_diff INT;
+    
+    SET full_date = MAKEDATE(year_input, 1);
+    SET age_diff = TIMESTAMPDIFF(YEAR, last_year, full_date);
+    
+    RETURN age_diff;
+END //
+
+
+DELIMITER ;
+select CalculateAgeDiff(2000)
